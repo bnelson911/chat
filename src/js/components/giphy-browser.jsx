@@ -28,6 +28,10 @@ class GiphyBrowser extends React.Component {
     this.state = {
       categories: [
         {
+          q: 'unicorn',
+          id: 'zyvX4znjfNqdG',
+        },
+        {
           q: 'agree',
           id: 'l0MYrWIbh4o0NpVfO',
         },
