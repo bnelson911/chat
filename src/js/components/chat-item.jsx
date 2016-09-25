@@ -1,6 +1,7 @@
 import React from 'react';
 import moment from 'moment';
 import Linkify from '../utils/better-linkify';
+import Emoji from './emoji-reactions.jsx';
 
 import '../../css/_chat-item.scss';
 
@@ -11,13 +12,15 @@ class ChatItem extends React.Component {
     this.state = {
       item: null,
       imageLoaded: false,
+      reactions: false
     };
     this.handleImageLoaded = this.handleImageLoaded.bind(this);
     this.renderAvatar = this.renderAvatar.bind(this);
     this.renderTimestamp = this.renderTimestamp.bind(this);
     this.renderContent = this.renderContent.bind(this);
+    this.renderReactions = this.renderReactions.bind(this);
+    this.showReactions = this.showReactions.bind(this);
   }
-
 
   componentWillMount() {
     const obj = this.props.item;
@@ -79,6 +82,16 @@ class ChatItem extends React.Component {
     return <Linkify properties={{onClick: this.handleLinkClick}} className="chat-item--inner--message--content">{this.props.item.message}</Linkify>;
   }
 
+  showReactions() {
+    this.setState({reactions: true});
+  }
+
+  renderReactions() {
+    if(this.state.reactions === true){
+      return <div className="chat-reactions" style={{paddingLeft: `5%`, height: `10px`, width: `100%`, paddingBottom: `10%`}}><Emoji/></div>
+    }
+  }
+
   render() {
     const { prevItem, item } = this.props;
     const isRepeat = (item.type !== 'image' && prevItem.user_id === item.user_id) && ((item.created_at-prevItem.created_at) < 60*60*1000);
@@ -96,11 +109,12 @@ class ChatItem extends React.Component {
               {this.renderTimestamp(isRepeat)}
             </span>
           </div>
-          <div className="chat-item--inner--message" style={isRepeat ? { margin: 0 } : {}}>
+          <div className="chat-item--inner--message" onClick={this.showReactions} style={isRepeat ? { margin: 0 } : {}}>
             {this.renderContent(isRepeat)}
           </div>
         </div>
       </div>
+      {this.renderReactions()}
     </li>);
   }
 }
