@@ -174,7 +174,7 @@ class ChatInput extends React.Component {
           onChange={this.handleInputChange}
           value={this.state.messageText}
         />
-        <div onClick={this.handleSendChat} className="send-button" style={this.calculateSendBtnStyle()}>
+        <div onTouchStart={this.handleSendChat} onMouseDown={this.handleSendChat} className="send-button" style={this.calculateSendBtnStyle()}>
           <span>Send</span>
         </div>
       </div>
