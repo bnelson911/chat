@@ -89,10 +89,10 @@
   position:relative;
   word-wrap: break-word;
   line-height: 1.45;
-  cursor: pointer;
   display: block;
   max-width: 80vw;
   margin: 1px 0;
+  user-select:text;
 }
 
 
