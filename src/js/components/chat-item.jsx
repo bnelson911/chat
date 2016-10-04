@@ -36,12 +36,7 @@ class ChatItem extends React.Component {
 
   handleLinkClick(e) {
     e.preventDefault();
-    // eslint-disable-next-line
-    if(Bebo.Utils.isMobile()){
-      Bebo.openURI(e.target.href);
-    }else{
-      window.open(e.target.href, "_blank");
-    }
+    Bebo.openURI(e.target.href);
   }
 
   renderAvatar(isRepeat) {
