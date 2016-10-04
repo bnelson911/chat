@@ -50,8 +50,10 @@ class ChatInput extends React.Component {
   blockEnterKey(e) {
     if (e.keyCode === 13 && this.state.messageText && this.state.messageText.length) {
       this.handleSendChat(e);
+      e.preventDefault();
     } else if(e.keyCode === 13) {
       this.refs.textarea.blur();
+      e.preventDefault();
     }
   }
 
@@ -60,10 +62,10 @@ class ChatInput extends React.Component {
     if (!this.state.isTyping) {
       this.setState({ isTyping: true });
       // eslint-disable-next-line
-      Bebo.emitEvent({ presence: { started_typing: this.state.user.user_id } });
+      Bebo.Room.emitEvent({ presence: { started_typing: this.state.user.user_id } });
       this.typingInterval = setInterval(() => {
         // eslint-disable-next-line
-        Bebo.emitEvent({ type: 'chat_presence', presence: { started_typing: this.state.user.user_id } });
+        Bebo.Room.emitEvent({ type: 'chat_presence', presence: { started_typing: this.state.user.user_id } });
       }, 3000);
     }
     this.isTypingTimeout = setTimeout(this.stoppedTyping, 3000);
@@ -77,7 +79,7 @@ class ChatInput extends React.Component {
   stoppedTyping() {
     clearInterval(this.typingInterval);
     // eslint-disable-next-line
-    Bebo.emitEvent({ type: 'chat_presence', presence: { stopped_typing: this.state.user.user_id } });
+    Bebo.Room.emitEvent({ type: 'chat_presence', presence: { stopped_typing: this.state.user.user_id } });
     this.setState({ isTyping: false });
   }
 
@@ -114,16 +116,16 @@ class ChatInput extends React.Component {
       return;
     }
     const m = data.result[0];
-    // { rate_limit_key: `${m.user_id}_${Math.floor(Date.now() / 1000 / 60 / 60)}` }
+    debugger;
     // eslint-disable-next-line
-    Bebo.Notification.roster('{{{user.username}}}:', m.message, [], (error, resp) => {
+    Bebo.Notification.roster('{{{user.username}}}:', m.message, (error, resp) => {
       if (error) {
         return console.log('error sending notification', error);
       }
       return console.log('resp', resp); // an object containing success
     });
     // eslint-disable-next-line
-    Bebo.emitEvent({ type: 'chat_sent', message: m });
+    Bebo.Room.emitEvent({ type: 'chat_sent', message: m });
     this.stoppedTyping();
     // TODO check if any user is in str
   }

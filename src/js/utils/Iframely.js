@@ -19,7 +19,6 @@ class Iframely extends React.Component {
 
   render() {
     let width = Bebo.Utils.isMobile() ? "100%" : "50%";
-    console.log("width", width);
     return <div style={{width}} dangerouslySetInnerHTML={this.getIframelyHtml()} />
   }
 }

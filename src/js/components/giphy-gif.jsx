@@ -22,7 +22,7 @@ class GiphyGif extends React.Component {
       return console.log('resp', resp); // an object containing success
     });
     // eslint-disable-next-line
-    Bebo.emitEvent({ type: 'chat_sent', message: m });
+    Bebo.Room.emitEvent({ type: 'chat_sent', message: m });
 
     this.props.switchMode('text');
   }
