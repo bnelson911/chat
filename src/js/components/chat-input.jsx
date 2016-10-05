@@ -116,9 +116,8 @@ class ChatInput extends React.Component {
       return;
     }
     const m = data.result[0];
-    debugger;
     // eslint-disable-next-line
-    Bebo.Notification.roster('{{{user.username}}}:', m.message, (error, resp) => {
+    Bebo.Notification.roster('{{{user.username}}}:', m.message, [], (error, resp) => {
       if (error) {
         return console.log('error sending notification', error);
       }
