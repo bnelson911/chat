@@ -3,7 +3,7 @@ import ChatItem from './chat-item.jsx';
 
 import '../../css/_chat-list.scss';
 
-const COUNT=10;
+const COUNT=50;
 
 class ChatList extends React.Component {
 
@@ -54,13 +54,17 @@ class ChatList extends React.Component {
   }
 
   componentWillUnmount() {
+
     if(this.presenceTimeout) {
       clearTimeout(this.presenceTimeout);
     }
+
     if(this.presenceInterval) {
       clearInterval(this.presenceInterval);
     }
+
   }
+
   loadMore(offset) {
     console.log("loading more posts", offset);
     return this.getMessages(COUNT, offset);
@@ -99,7 +103,7 @@ class ChatList extends React.Component {
     const item = this.refs.chats.lastChild;
     const diff = list.scrollHeight - list.offsetHeight - item.clientHeight;
 
-    if (list.scrollTop < 200 && this.hasMore) {
+    if (list.scrollTop < 1000 && this.hasMore) {
       this.loadMore(this.offset);
     }
 
@@ -217,11 +221,13 @@ class ChatList extends React.Component {
   }
 
   renderChatList() {
-    const { hasMore, messages } = this.state;
+    const { messages } = this.state;
+    var hasMore = this.state.hasMore && this.hasMore;
+
     return (
       <div ref="chatListInner" className="chat-list--inner" onScroll={this.handleScroll} onClick={this.handleListClick}>
         <ul ref="chats" className="chat-list--inner--list">
-          {hasMore ?  <div style={{clear: 'both'}} className="loader">Loading ...</div> : ""}
+          {hasMore ?  <li style={{clear: 'both'}} className="">Loading ...</li> : ""}
           {messages.map((item, i) => <ChatItem handleNewMessage={this.handleNewMessage} item={item} prevItem={messages[i - 1] || {}} key={item.id} />)}
           {this.renderNoChatsMessage}
         </ul>
