@@ -1,10 +1,9 @@
 import React from 'react';
 import ChatItem from './chat-item.jsx';
-import InfiniteScroll from 'react-infinite-scroller';
 
 import '../../css/_chat-list.scss';
 
-const COUNT=25;
+const COUNT=10;
 
 class ChatList extends React.Component {
 
@@ -12,14 +11,16 @@ class ChatList extends React.Component {
     super();
     this.state = {
       maxCount: 50,
-      hasMore: true,
-      offset: 0,
       scrolledPastFirstMessage: false,
       isScrolling: false,
       messages: [],
       unloadedMessages: [],
       usersTypingCount: 0,
+      hasMore: true,
     };
+    this.hasMore = true;
+    this.offset = 0;
+    this.store = [];
     this.usersTyping = {};
     this.getMessages = this.getMessages.bind(this);
     this.handleScroll = this.handleScroll.bind(this);
@@ -43,6 +44,15 @@ class ChatList extends React.Component {
     Bebo.onEvent(this.handleEventUpdate);
   }
 
+  componentDidMount() {
+    this.handleScroll();
+  }
+
+  componentDidUpdate() {
+    console.log("componentDidUpdate");
+    this.handleScroll();
+  }
+
   componentWillUnmount() {
     if(this.presenceTimeout) {
       clearTimeout(this.presenceTimeout);
@@ -51,8 +61,7 @@ class ChatList extends React.Component {
       clearInterval(this.presenceInterval);
     }
   }
-  loadMore(pageToLoad) {
-    var offset = (pageToLoad - 1) * COUNT; // infinite-scroller does + 1
+  loadMore(offset) {
     console.log("loading more posts", offset);
     return this.getMessages(COUNT, offset);
   }
@@ -63,36 +72,36 @@ class ChatList extends React.Component {
       offset = 0;
     }
     var that = this;
-    
-    var options = {count, offset};
-    Bebo.Db.get('messages', options, (err, data) => {
-      if (err) {
-        console.log('error getting list');
-        return;
-      }
-      var hasMore;
-      if (options.count) { 
-        hasMore = data.result.length === options.count;
-      }
-      var state = {};
-      if (options.count) {
-        state.pageToLoad = this.state.messages.length;
-        state.offset = options.offset;
-        state.hasMore = hasMore;
-      }
-      var list = data.result.reverse();
-      list = _.unionBy(list, that.state.messages, "id");
-      list = _.orderBy(list, "created_dttm", "asc");
-      state.messages = list;
-      that.setState(state);
-    });
+    var options = {count, offset, sort_by:"created_dttm", sort_order: "desc"};
+    Bebo.Db.get('messages', options)
+      .then(function (data) {
+        var hasMore;
+        if (options.count) { 
+          hasMore = data.result.length === options.count;
+          console.log("loading - hasmore", hasMore, data.result.length, options.count);
+        }
+        var state = {};
+        that.offset = that.offset + options.count;
+        if (options.count) {
+          that.hasMore = hasMore;
+          state.hasMore = hasMore;
+        }
+        that.store = _.unionBy(data.result, that.store, "id");
+        that.store = _.orderBy(that.store, "created_dttm", "asc");
+        state.messages = that.store;
+        that.setState(state);
+      }).catch((err) => console.log('error getting list:', err, err.stack));
   }
 
   handleScroll() {
+
     const list = this.refs.chatListInner;
     const item = this.refs.chats.lastChild;
-
     const diff = list.scrollHeight - list.offsetHeight - item.clientHeight;
+
+    if (list.scrollTop < 200 && this.hasMore) {
+      this.loadMore(this.offset);
+    }
 
     if (list.scrollTop <= diff && !this.state.scrolledPastFirstMessage) {
       this.setState({ scrolledPastFirstMessage: true });
@@ -120,7 +129,6 @@ class ChatList extends React.Component {
       this.setState({ unloadedMessages: messages });
     }
   }
-
 
   addNewMessages(arr) {
     const messages = this.state.messages.concat(arr);
@@ -209,18 +217,15 @@ class ChatList extends React.Component {
   }
 
   renderChatList() {
-    const { messages } = this.state;
+    const { hasMore, messages } = this.state;
     return (
-      <ul ref="chats" className="chat-list--inner--list">
-          <InfiniteScroll pageStart={this.state.offset}
-            hasMore={this.state.hasMore}
-            loadMore={this.loadMore}
-            useWindow={false}
-            loader={<div style={{clear: 'both'}} className="loader">Loading ...</div>}>
-              {messages.map((item, i) => <ChatItem handleNewMessage={this.handleNewMessage} item={item} prevItem={messages[i - 1] || {}} key={item.id} />)}
-          </InfiniteScroll>
+      <div ref="chatListInner" className="chat-list--inner" onScroll={this.handleScroll} onClick={this.handleListClick}>
+        <ul ref="chats" className="chat-list--inner--list">
+          {hasMore ?  <div style={{clear: 'both'}} className="loader">Loading ...</div> : ""}
+          {messages.map((item, i) => <ChatItem handleNewMessage={this.handleNewMessage} item={item} prevItem={messages[i - 1] || {}} key={item.id} />)}
           {this.renderNoChatsMessage}
-      </ul>
+        </ul>
+      </div>
     );
   }
 
@@ -228,9 +233,7 @@ class ChatList extends React.Component {
     const count = this.state.usersTypingCount;
     return (<div className="chat-list">
       {this.renderMessagesBadge()}
-      <div style={count > 0 ? { transform: 'translate3d(0,-37px,0)' } : {}} ref="chatListInner" className="chat-list--inner" onScroll={this.handleScroll} onClick={this.handleListClick}>
-        {this.renderChatList()}
-      </div>
+      {this.renderChatList()}
       {this.renderUsersAreTyping()}
     </div>);
   }
