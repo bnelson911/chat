@@ -1,7 +1,10 @@
 import React from 'react';
 import ChatItem from './chat-item.jsx';
+import InfiniteScroll from 'react-infinite-scroller';
 
 import '../../css/_chat-list.scss';
+
+const COUNT=25;
 
 class ChatList extends React.Component {
 
@@ -9,6 +12,8 @@ class ChatList extends React.Component {
     super();
     this.state = {
       maxCount: 50,
+      hasMore: true,
+      offset: 0,
       scrolledPastFirstMessage: false,
       isScrolling: false,
       messages: [],
@@ -16,8 +21,7 @@ class ChatList extends React.Component {
       usersTypingCount: 0,
     };
     this.usersTyping = {};
-
-    this.getOldMessages = this.getOldMessages.bind(this);
+    this.getMessages = this.getMessages.bind(this);
     this.handleScroll = this.handleScroll.bind(this);
     this.handleEventUpdate = this.handleEventUpdate.bind(this);
     this.handleMessageEvent = this.handleMessageEvent.bind(this);
@@ -31,10 +35,10 @@ class ChatList extends React.Component {
     this.renderMessagesBadge = this.renderMessagesBadge.bind(this);
     this.renderUsersAreTyping = this.renderUsersAreTyping.bind(this);
     this.renderChatList = this.renderChatList.bind(this);
+    this.loadMore = this.loadMore.bind(this);
   }
 
   componentWillMount() {
-    this.getOldMessages();
     // eslint-disable-next-line
     Bebo.onEvent(this.handleEventUpdate);
   }
@@ -47,16 +51,40 @@ class ChatList extends React.Component {
       clearInterval(this.presenceInterval);
     }
   }
+  loadMore(pageToLoad) {
+    var offset = (pageToLoad - 1) * COUNT; // infinite-scroller does + 1
+    console.log("loading more posts", offset);
+    return this.getMessages(COUNT, offset);
+  }
 
-  getOldMessages() {
-    // eslint-disable-next-line
-    Bebo.Db.get('messages', { count: 50 }, (err, data) => {
+  getMessages(count, offset) {
+
+    if (!offset) {
+      offset = 0;
+    }
+    var that = this;
+    
+    var options = {count, offset};
+    Bebo.Db.get('messages', options, (err, data) => {
       if (err) {
         console.log('error getting list');
         return;
       }
-      const list = data.result.reverse();
-      this.setState({ messages: list });
+      var hasMore;
+      if (options.count) { 
+        hasMore = data.result.length === options.count;
+      }
+      var state = {};
+      if (options.count) {
+        state.pageToLoad = this.state.messages.length;
+        state.offset = options.offset;
+        state.hasMore = hasMore;
+      }
+      var list = data.result.reverse();
+      list = _.unionBy(list, that.state.messages, "id");
+      list = _.orderBy(list, "created_dttm", "asc");
+      state.messages = list;
+      that.setState(state);
     });
   }
 
@@ -159,7 +187,9 @@ class ChatList extends React.Component {
   // Renders
 
   renderNoChatsMessage() {
-    return <div className="chat-list--no-messages" />;
+    if (!this.state.messages || this.state.messages.length === 0) {
+      return <div className="chat-list--no-messages" />;
+    }
   }
 
   renderMessagesBadge() {
@@ -180,14 +210,18 @@ class ChatList extends React.Component {
 
   renderChatList() {
     const { messages } = this.state;
-    if (messages && messages.length) {
-      return (<ul ref="chats" className="chat-list--inner--list">
-        {messages.map((item, i) => <ChatItem handleNewMessage={this.handleNewMessage} item={item} prevItem={messages[i - 1] || {}} key={item.id} />)}
-      </ul>);
-    }
-    return (<ul className="chat-list--inner--list">
-      {this.renderNoChatsMessage}
-    </ul>);
+    return (
+      <ul ref="chats" className="chat-list--inner--list">
+          <InfiniteScroll pageStart={this.state.offset}
+            hasMore={this.state.hasMore}
+            loadMore={this.loadMore}
+            useWindow={false}
+            loader={<div style={{clear: 'both'}} className="loader">Loading ...</div>}>
+              {messages.map((item, i) => <ChatItem handleNewMessage={this.handleNewMessage} item={item} prevItem={messages[i - 1] || {}} key={item.id} />)}
+          </InfiniteScroll>
+          {this.renderNoChatsMessage}
+      </ul>
+    );
   }
 
   render() {
