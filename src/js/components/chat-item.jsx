@@ -30,6 +30,23 @@ class ChatItem extends React.Component {
     this.props.handleNewMessage();
   }
 
+  shouldComponentUpdate(nextProps, nextState) {
+    // if (this.item.id !== nextState.item.id || this.item.updated_at !== this.item.updated_at) {
+    if (this.props.item.id !== nextProps.item.id) {
+      return true;
+    }
+    if (!this.state.item) {
+      return true;
+    }
+    if (this.state.item.id !== nextState.item.id) {
+      return true;
+    }
+    if (this.state.imageLoaded !== nextState.imageLoaded) {
+      return true;
+    }
+    return false;
+  }
+
   handleImageLoaded() {
     this.setState({ imageLoaded: true });
   }
@@ -58,7 +75,15 @@ class ChatItem extends React.Component {
     if (isRepeat) {
       return null;
     }
-    return moment(item.created_at).format('LT');
+    return this.timestampToString(item.created_at);
+  }
+
+  timestampToString(t) {
+    var m = moment(t);
+    if (m.isBefore(new Date(), 'day')) {
+      return m.format('lll');
+    }
+    return m.format('LT');
   }
 
   renderContent(isRepeat) {
@@ -80,7 +105,11 @@ class ChatItem extends React.Component {
   render() {
     const { prevItem, item } = this.props;
     const isRepeat = (item.type !== 'image' && prevItem.user_id === item.user_id) && ((item.created_at-prevItem.created_at) < 60*60*1000);
-    return (<li className="chat-item" style={isRepeat ? { padding: 0 } : {}}>
+    var onAnchorRef;
+    if (this.props.isAnchor) {
+      onAnchorRef = this.props.onAnchorRef
+    }
+    return (<li className="chat-item" ref={onAnchorRef} style={isRepeat ? { padding: 0 } : {}}>
       <div className="chat-item--inner">
         <div className="chat-item--inner--left">
           <div className="chat-item--inner--avatar" style={isRepeat ? { visibility: 'hidden', height: 'auto' } : {}}>

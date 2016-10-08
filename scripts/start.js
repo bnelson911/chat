@@ -210,6 +210,7 @@ function addMiddleware(devServer) {
 
 function runDevServer(port) {
   var devServer = new WebpackDevServer(compiler, {
+    // proxy: {"**": "https://fpn.blab-dev.im:3000"},
     // Enable hot reloading server. It will provide /sockjs-node/ endpoint
     // for the WebpackDevServer client so it can learn when the files were
     // updated. The WebpackDevServer client is included as an entry point
@@ -221,12 +222,14 @@ function runDevServer(port) {
     publicPath: config.output.publicPath,
     // WebpackDevServer is noisy by default so we emit custom message instead
     // by listening to the compiler events with `compiler.plugin` calls above.
+    // quiet: true,
     quiet: true,
     // Reportedly, this avoids CPU overload on some systems.
     // https://github.com/facebookincubator/create-react-app/issues/293
     watchOptions: {
       ignored: /node_modules/
     }
+
   });
 
   // Our custom middleware proxies requests to /index.html or a remote API.

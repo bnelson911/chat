@@ -30,7 +30,7 @@ module.exports = {
     // route like /todos/42 would make it wrongly request /todos/42/sockjs-node.
     // The socket server is a part of WebpackDevServer which we are using.
     // The /sockjs-node/ path I'm referring to is hardcoded in WebpackDevServer.
-    require.resolve('webpack-dev-server/client') + '?/',
+    require.resolve('webpack-dev-server/client') + '?https://fpn.blab-dev.im:3000',
     // Include Webpack hot module replacement runtime. Webpack is pretty
     // low-level so we need to put all the pieces together. The runtime listens
     // to the events received by the client above, and applies updates (such as

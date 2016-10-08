@@ -3,7 +3,7 @@ import ChatItem from './chat-item.jsx';
 
 import '../../css/_chat-list.scss';
 
-const COUNT=50;
+const COUNT=30;
 
 class ChatList extends React.Component {
 
@@ -18,6 +18,7 @@ class ChatList extends React.Component {
       usersTypingCount: 0,
       hasMore: true,
     };
+    this.maxElement = 0;
     this.hasMore = true;
     this.offset = 0;
     this.store = [];
@@ -37,6 +38,8 @@ class ChatList extends React.Component {
     this.renderUsersAreTyping = this.renderUsersAreTyping.bind(this);
     this.renderChatList = this.renderChatList.bind(this);
     this.loadMore = this.loadMore.bind(this);
+    this.onScroll = this.onScroll.bind(this);
+    this.onAnchorRef = this.onAnchorRef.bind(this);
   }
 
   componentWillMount() {
@@ -44,13 +47,23 @@ class ChatList extends React.Component {
     Bebo.onEvent(this.handleEventUpdate);
   }
 
+  componentWillUpdate(prevProps, prevState) {
+    this.saveScrollPosition();
+  }
+
   componentDidMount() {
-    this.handleScroll();
+    const list = this.refs.chatListInner;
+    if (list.scrollTop < 1000 && this.hasMore) {
+      this.loadMore(this.offset);
+    }
   }
 
   componentDidUpdate() {
-    console.log("componentDidUpdate");
-    this.handleScroll();
+    this.keepScrollPosition();
+    const list = this.refs.chatListInner;
+    if (list.scrollTop < 1000 && this.hasMore) {
+      this.loadMore(this.offset);
+    }
   }
 
   componentWillUnmount() {
@@ -70,31 +83,66 @@ class ChatList extends React.Component {
     return this.getMessages(COUNT, offset);
   }
 
+  keepScrollPosition() {
+    if (this.scrollTop !== 0) {
+      this.scrollTarget = this.scrollTop + ( this.refs.chatListInner.scrollHeight - this.scrollHeight);
+      this.refs.chatListInner.scrollTop = this.scrollTarget;
+    }
+  }
+
+  onAnchorRef(ref) {
+    this.anchorRef = ref;
+  }
+
   getMessages(count, offset) {
 
     if (!offset) {
       offset = 0;
     }
+
+
+    var maxElement = count + offset;
+    if (maxElement <= this.maxElement) {
+      return;
+    }
+
     var that = this;
     var options = {count, offset, sort_by:"created_dttm", sort_order: "desc"};
+    var n = performance.now();
     Bebo.Db.get('messages', options)
       .then(function (data) {
+        var delta = performance.now() -n;
+        if (delta > 1000) {
+          console.warn("Slow fetch", delta, "ms - ", count, offset);
+        }
         var hasMore;
         if (options.count) { 
           hasMore = data.result.length === options.count;
-          console.log("loading - hasmore", hasMore, data.result.length, options.count);
         }
         var state = {};
-        that.offset = that.offset + options.count;
+        that.offset = options.offset + options.count;
         if (options.count) {
           that.hasMore = hasMore;
           state.hasMore = hasMore;
         }
         that.store = _.unionBy(data.result, that.store, "id");
         that.store = _.orderBy(that.store, "created_dttm", "asc");
+        if (!that.anchor_id && that.store.length !== 0) {
+          that.anchor_id = that.store[that.store.length-1].id;
+        }
         state.messages = that.store;
         that.setState(state);
       }).catch((err) => console.log('error getting list:', err, err.stack));
+  }
+
+  saveScrollPosition() {
+    this.scrollTop = this.refs.chatListInner.scrollTop;
+    this.scrollHeight = this.refs.chatListInner.scrollHeight;
+    if (this.anchorRef) {
+      console.log(this.anchorRef.offsetTop);
+      this.offsetTop = this.anchorRef.offsetTop;
+    }
+    console.log("scrollTop", this.scrollTop, this.scrollHeight);
   }
 
   handleScroll() {
@@ -103,15 +151,37 @@ class ChatList extends React.Component {
     const item = this.refs.chats.lastChild;
     const diff = list.scrollHeight - list.offsetHeight - item.clientHeight;
 
-    if (list.scrollTop < 1000 && this.hasMore) {
+    if (list.scrollTop < 800 && this.hasMore) {
       this.loadMore(this.offset);
     }
 
-    if (list.scrollTop <= diff && !this.state.scrolledPastFirstMessage) {
-      this.setState({ scrolledPastFirstMessage: true });
-    } else if (list.scrollTop >= diff && this.state.scrolledPastFirstMessage) {
-      this.scrollChatToBottom();
+    // if (list.scrollTop <= diff && !this.state.scrolledPastFirstMessage) {
+    //   this.setState({ scrolledPastFirstMessage: true });
+    // } else if (list.scrollTop >= diff && this.state.scrolledPastFirstMessage) {
+    //   this.scrollChatToBottom();
+    // }
+  }
+
+  onScroll(e) {
+    // clear message if scroll, but not auto-scroll
+    if (this.state.newMsgPost && this.scrollTarget !== e.currentTarget.scrollTop ) {
+      this.setState({newMsgPost: false});
     }
+  }
+
+  keepScrollPosition() {
+    if (this.offsetTop == null) {
+      return;
+    }
+    if (this.anchorRef.offsetTop !== this.offsetTop) {
+      this.scrollTarget = this.scrollTop + (this.anchorRef.offsetTop - this.offsetTop );
+      this.refs.chatListInner.scrollTop = this.scrollTarget;
+    }
+  }
+
+  scrollWallToTop() {
+    this.refs.chatListInner.scrollTop = 0;
+    this.setState({newMsgPost: false});
   }
 
   handleEventUpdate(data) {
@@ -228,7 +298,7 @@ class ChatList extends React.Component {
       <div ref="chatListInner" className="chat-list--inner" onScroll={this.handleScroll} onClick={this.handleListClick}>
         <ul ref="chats" className="chat-list--inner--list">
           {hasMore ?  <li style={{clear: 'both'}} className="">Loading ...</li> : ""}
-          {messages.map((item, i) => <ChatItem handleNewMessage={this.handleNewMessage} item={item} prevItem={messages[i - 1] || {}} key={item.id} />)}
+          {messages.map((item, i) => <ChatItem isAnchor={item.id===this.anchor_id} onAnchorRef={this.onAnchorRef} handleNewMessage={this.handleNewMessage} item={item} prevItem={messages[i - 1] || {}} key={item.id} />)}
           {this.renderNoChatsMessage}
         </ul>
       </div>
