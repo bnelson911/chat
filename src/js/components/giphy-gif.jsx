@@ -46,9 +46,10 @@ class GiphyGif extends React.Component {
           height: gif.images.fixed_width_downsampled.height,
         };
         const message = {
-          image,
-          username,
-          user_id,
+          id: uuid.v4(),
+          image: image,
+          username: username,
+          user_id: user_id,
           type: 'image',
         };
         // eslint-disable-next-line

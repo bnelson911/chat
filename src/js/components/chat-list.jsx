@@ -67,7 +67,6 @@ class ChatList extends React.Component {
   }
 
   componentWillUnmount() {
-
     if(this.presenceTimeout) {
       clearTimeout(this.presenceTimeout);
     }
@@ -75,7 +74,6 @@ class ChatList extends React.Component {
     if(this.presenceInterval) {
       clearInterval(this.presenceInterval);
     }
-
   }
 
   loadMore(offset) {
@@ -146,7 +144,6 @@ class ChatList extends React.Component {
   }
 
   handleScroll() {
-
     const list = this.refs.chatListInner;
     const item = this.refs.chats.lastChild;
     const diff = list.scrollHeight - list.offsetHeight - item.clientHeight;
@@ -194,9 +191,12 @@ class ChatList extends React.Component {
   }
 
   handleMessageEvent(message) {
+    this.store.push(message);
     if (!this.state.scrolledPastFirstMessage) {
       this.addNewMessages([message]);
-      if (message.user_id === this.props.actingUser.user_id) { this.scrollChatToBottom(); }
+      if (message.user_id === this.props.actingUser.user_id) {
+        this.scrollChatToBottom();
+      }
     } else {
       const messages = this.state.unloadedMessages;
       messages.push(message);
@@ -205,6 +205,7 @@ class ChatList extends React.Component {
   }
 
   addNewMessages(arr) {
+    console.log("addNewMessages", arr);
     const messages = this.state.messages.concat(arr);
     this.setState({
       messages,

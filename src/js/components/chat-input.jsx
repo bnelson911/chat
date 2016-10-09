@@ -1,5 +1,6 @@
 import React from 'react';
 import '../../css/_chat-input.scss'
+import uuid from 'node-uuid'
 
 
 class ChatInput extends React.Component {
@@ -92,6 +93,7 @@ class ChatInput extends React.Component {
     const text = this.state.messageText.trim();
     if (text.length > 0) {
       const message = {
+        id: uuid.v4(),
         type: 'message',
         username: this.state.user.username,
         user_id: this.state.user.user_id,
