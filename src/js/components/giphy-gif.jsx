@@ -1,4 +1,5 @@
 import React from 'react';
+import uuid from 'node-uuid'
 
 class GiphyGif extends React.Component {
 
