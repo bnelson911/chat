@@ -61,10 +61,13 @@ class ChatItem extends React.Component {
     if (isRepeat) {
       return null;
     }
-    const pixelRatio = window.devicePixelRatio;
-    const size = 36 * pixelRatio;
-    // eslint-disable-next-line
-    const url = `${Bebo.getImageUrl()}image/user/${item.user_id}?h=${size}&w=${size}`;
+    const size = 288; // use default profile image size so we may cache it
+    var url = item.user_image_url;
+    if (url) {
+      url = url + "?h=${size}&w=${size}";
+    } else {
+      url = `${Bebo.getImageUrl()}image/user/${item.user_id}?h=${size}&w=${size}`;
+    }
     return (<div className="ui-avatar">
       <img src={url} role="presentation" />
     </div>);

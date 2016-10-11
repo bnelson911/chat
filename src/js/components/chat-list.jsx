@@ -2,6 +2,7 @@ import React from 'react';
 import ChatItem from './chat-item.jsx';
 
 import '../../css/_chat-list.scss';
+import uuid from 'node-uuid';
 
 const COUNT=30;
 
@@ -92,12 +93,51 @@ class ChatList extends React.Component {
     this.anchorRef = ref;
   }
 
+  getFakeWelcomeMessage() {
+    console.log("WTF");
+    var created_at = Date.now();
+    return [
+      {
+        id: uuid.v4(),
+        type: 'message',
+        username: "Team Bebo",
+        user_id: this.props.actingUser.user_id,
+        user_image_url: "https://a.imgdropt.com/image/f162ee07-f92a-44de-bb64-7d70c5dd0ce8",
+        message: "Welcome to your group chat!",
+        users: [],
+        created_dttm: new Date(),
+        created_at,
+      },
+      {
+        id: uuid.v4(),
+        type: 'message',
+        username: "Team Bebo",
+        user_id: this.props.actingUser.user_id,
+        user_image_url: "https://a.imgdropt.com/image/f162ee07-f92a-44de-bb64-7d70c5dd0ce8",
+        message: "This chat is private to your group, you already know how chat works 🙂",
+        users: [],
+        created_dttm: new Date(),
+        created_at,
+      },
+      {
+        id: uuid.v4(),
+        type: 'message',
+        username: "Team Bebo",
+        user_id: this.props.actingUser.user_id,
+        user_image_url: "https://a.imgdropt.com/image/f162ee07-f92a-44de-bb64-7d70c5dd0ce8",
+        message: "I'l be dropping out now",
+        users: [],
+        created_dttm: new Date(),
+        created_at,
+      }
+    ];
+  }
+
   getMessages(count, offset) {
 
     if (!offset) {
       offset = 0;
     }
-
 
     var maxElement = count + offset;
     if (maxElement <= this.maxElement) {
@@ -106,13 +146,8 @@ class ChatList extends React.Component {
 
     var that = this;
     var options = {count, offset, sort_by:"created_dttm", sort_order: "desc"};
-    var n = performance.now();
     Bebo.Db.get('messages', options)
       .then(function (data) {
-        var delta = performance.now() -n;
-        if (delta > 1000) {
-          console.warn("Slow fetch", delta, "ms - ", count, offset);
-        }
         var hasMore;
         if (options.count) { 
           hasMore = data.result.length === options.count;
@@ -123,10 +158,14 @@ class ChatList extends React.Component {
           that.hasMore = hasMore;
           state.hasMore = hasMore;
         }
-        that.store = _.unionBy(data.result, that.store, "id");
-        that.store = _.orderBy(that.store, "created_dttm", "asc");
-        if (!that.anchor_id && that.store.length !== 0) {
-          that.anchor_id = that.store[that.store.length-1].id;
+        if (data.result.length === 0 && options.offset === 0 && options.count > 0) {
+          that.store = that.getFakeWelcomeMessage();
+        } else {
+          that.store = _.unionBy(data.result, that.store, "id");
+          that.store = _.orderBy(that.store, "created_dttm", "asc");
+          if (!that.anchor_id && that.store.length !== 0) {
+            that.anchor_id = that.store[that.store.length-1].id;
+          }
         }
         state.messages = that.store;
         that.setState(state);
