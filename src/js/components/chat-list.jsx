@@ -5,11 +5,7 @@ import '../../css/_chat-list.scss';
 import uuid from 'node-uuid';
 
 const COUNT=30;
-
-var bot_user_id = "208ee4a33aca4b238648998e98fbb302";
-if (Bebo.Utils.getEnv() === "dev") {
-  bot_user_id = "9c7b8cfb6e5b47b5afc2e3eb7f864516";
-}
+var bot_user_id;
 
 class ChatList extends React.Component {
 
@@ -24,6 +20,12 @@ class ChatList extends React.Component {
       usersTypingCount: 0,
       hasMore: true,
     };
+    if (!bot_user_id) {
+      bot_user_id = "208ee4a33aca4b238648998e98fbb302";
+      if (Bebo.Utils.getEnv() === "dev") {
+        bot_user_id = "9c7b8cfb6e5b47b5afc2e3eb7f864516";
+      }
+    }
     this.maxElement = 0;
     this.hasMore = true;
     this.offset = 0;
