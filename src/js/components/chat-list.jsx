@@ -6,6 +6,11 @@ import uuid from 'node-uuid';
 
 const COUNT=30;
 
+var bot_user_id = "208ee4a33aca4b238648998e98fbb302";
+if (Bebo.Utils.getEnv() === "dev") {
+  bot_user_id = "9c7b8cfb6e5b47b5afc2e3eb7f864516";
+}
+
 class ChatList extends React.Component {
 
   constructor() {
@@ -94,14 +99,13 @@ class ChatList extends React.Component {
   }
 
   getFakeWelcomeMessage() {
-    console.log("WTF");
     var created_at = Date.now();
     return [
       {
         id: uuid.v4(),
         type: 'message',
         username: "Team Bebo",
-        user_id: this.props.actingUser.user_id,
+        user_id: bot_user_id,
         user_image_url: "https://a.imgdropt.com/image/f162ee07-f92a-44de-bb64-7d70c5dd0ce8",
         message: "Welcome to your group chat!",
         users: [],
@@ -112,7 +116,7 @@ class ChatList extends React.Component {
         id: uuid.v4(),
         type: 'message',
         username: "Team Bebo",
-        user_id: this.props.actingUser.user_id,
+        user_id: bot_user_id,
         user_image_url: "https://a.imgdropt.com/image/f162ee07-f92a-44de-bb64-7d70c5dd0ce8",
         message: "This chat is private to your group, you already know how chat works 🙂",
         users: [],
@@ -123,7 +127,7 @@ class ChatList extends React.Component {
         id: uuid.v4(),
         type: 'message',
         username: "Team Bebo",
-        user_id: this.props.actingUser.user_id,
+        user_id: bot_user_id,
         user_image_url: "https://a.imgdropt.com/image/f162ee07-f92a-44de-bb64-7d70c5dd0ce8",
         message: "I'l be dropping out now",
         users: [],
