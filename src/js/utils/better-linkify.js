@@ -1,7 +1,7 @@
 import React from 'react';
 import LinkifyIt from 'linkify-it';
 import tlds from 'tlds';
-import Iframely from './Iframely';
+// import Iframely from './Iframely';
 
 const linkify = new LinkifyIt();
 linkify.tlds(tlds);
@@ -27,6 +27,12 @@ class Linkify extends React.Component {
 
   getMatches(string) {
     return linkify.match(string);
+  }
+
+  handleLinkClick(link, e) {
+    e.preventDefault();
+    e.stopPropagation();
+    Bebo.openURI(link);
   }
 
   parseString(string) {
@@ -56,7 +62,7 @@ class Linkify extends React.Component {
 
         props[key] = val;
       }
-      elements.push(<Iframely url={match.url} />);
+      elements.push(<a href={match.url} onClick={(e)=>this.handleLinkClick(match.url, e)}>{match.url}</a>);
       lastIndex = match.lastIndex;
     });
 

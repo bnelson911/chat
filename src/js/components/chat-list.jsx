@@ -46,7 +46,6 @@ class ChatList extends React.Component {
     this.renderUsersAreTyping = this.renderUsersAreTyping.bind(this);
     this.renderChatList = this.renderChatList.bind(this);
     this.loadMore = this.loadMore.bind(this);
-    this.onScroll = this.onScroll.bind(this);
     this.onAnchorRef = this.onAnchorRef.bind(this);
   }
 
@@ -64,6 +63,7 @@ class ChatList extends React.Component {
     if (list.scrollTop < 1000 && this.hasMore) {
       this.loadMore(this.offset);
     }
+    this.refs.chatListInner.scrollTop = this.refs.chatListInner.scrollHeight;
   }
 
   componentDidUpdate() {
@@ -72,6 +72,9 @@ class ChatList extends React.Component {
     if (list.scrollTop < 1000 && this.hasMore) {
       this.loadMore(this.offset);
     }
+    // if (!this.state.scrolledPastFirstMessage) {
+    //   this.refs.chatListInner.scrollTop = this.refs.chatListInner.scrollHeight;
+    // }
   }
 
   componentWillUnmount() {
@@ -190,25 +193,14 @@ class ChatList extends React.Component {
 
   handleScroll() {
     const list = this.refs.chatListInner;
-    const item = this.refs.chats.lastChild;
-    const diff = list.scrollHeight - list.offsetHeight - item.clientHeight;
-
     if (list.scrollTop < 800 && this.hasMore) {
       this.loadMore(this.offset);
     }
-
-    // if (list.scrollTop <= diff && !this.state.scrolledPastFirstMessage) {
+    // console.log("handleScroll");
+    // if (this.scrollTarget !== list.scrollTop) {
+    //   console.error("manual scroll", this.scrollTarget, list.scrollTop);
     //   this.setState({ scrolledPastFirstMessage: true });
-    // } else if (list.scrollTop >= diff && this.state.scrolledPastFirstMessage) {
-    //   this.scrollChatToBottom();
     // }
-  }
-
-  onScroll(e) {
-    // clear message if scroll, but not auto-scroll
-    if (this.state.newMsgPost && this.scrollTarget !== e.currentTarget.scrollTop ) {
-      this.setState({newMsgPost: false});
-    }
   }
 
   keepScrollPosition() {
@@ -219,11 +211,6 @@ class ChatList extends React.Component {
       this.scrollTarget = this.scrollTop + (this.anchorRef.offsetTop - this.offsetTop );
       this.refs.chatListInner.scrollTop = this.scrollTarget;
     }
-  }
-
-  scrollWallToTop() {
-    this.refs.chatListInner.scrollTop = 0;
-    this.setState({newMsgPost: false});
   }
 
   handleEventUpdate(data) {
@@ -283,6 +270,7 @@ class ChatList extends React.Component {
       this.updatePresence();
     }
   }
+
   updatePresence() {
     const usersTypingCount = Object.keys(this.usersTyping).length;
     if(usersTypingCount === 0) {
@@ -290,6 +278,7 @@ class ChatList extends React.Component {
     }
     this.setState({ usersTypingCount });
   }
+
   scrollChatToBottom() {
     if (this.state.unloadedMessages.length > 0) {
       this.addNewMessages(this.state.unloadedMessages);

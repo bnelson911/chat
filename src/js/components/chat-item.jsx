@@ -69,8 +69,8 @@ class ChatItem extends React.Component {
       url = `${Bebo.getImageUrl()}image/user/${item.user_id}?h=${size}&w=${size}`;
     }
     return (<div className="ui-avatar">
-      <img src={url} role="presentation" />
-    </div>);
+              <img src={url} role="presentation" />
+            </div>);
   }
 
   renderTimestamp(isRepeat) {
@@ -103,6 +103,7 @@ class ChatItem extends React.Component {
       </span>);
     }
     return <Linkify properties={{onClick: this.handleLinkClick}} className="chat-item--inner--message--content">{this.props.item.message}</Linkify>;
+    // return <div onClick={this.handleLinkClick} className="chat-item--inner--message--content">{this.props.item.message}</div>;
   }
 
   render() {
