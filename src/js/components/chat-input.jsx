@@ -33,6 +33,9 @@ class ChatInput extends React.Component {
 
   componentDidMount() {
     document.addEventListener('keydown', this.blockEnterKey, false);
+    if (!Bebo.Utils.isMobile()) {
+      this.refs.textarea.focus();
+    }
   }
 
   componentWillReceiveProps(nextProps) {
