@@ -122,12 +122,7 @@ class ChatInput extends React.Component {
     }
     const m = data.result[0];
     // eslint-disable-next-line
-    Bebo.Notification.roster('{{{user.username}}}:', m.message, [], (error, resp) => {
-      if (error) {
-        return console.log('error sending notification', error);
-      }
-      return console.log('resp', resp); // an object containing success
-    });
+    Bebo.Notification.roster('{{{user.username}}}:', m.message, []);
     // eslint-disable-next-line
     Bebo.Room.emitEvent({ type: 'chat_sent', message: m });
     this.stoppedTyping();
